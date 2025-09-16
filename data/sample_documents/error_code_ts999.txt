@@ -1,0 +1,42 @@
+Technical Support Documentation: Error Code TS-999
+
+Overview
+Error Code TS-999 indicates a "Database Connection Timeout" in the ACME Enterprise Suite application. This high-severity error occurs when the system fails to establish or maintain a connection to the backend database within the default 30-second timeout period. It is commonly encountered during peak usage times or when network/database resources are strained.
+
+Affected Components
+- ACME API Server (v2.3.1 and later)
+- Database: PostgreSQL 13.x or MySQL 8.x
+- Network: TCP port 5432 (PostgreSQL) or 3306 (MySQL)
+
+Symptoms
+Users may experience:
+- Application freezing or unresponsive UI
+- Failed login attempts or data submission errors
+- Log entries showing "TS-999: Connection timed out after 30000ms"
+- Dashboard metrics indicating elevated error rates (>5%)
+
+Root Causes
+1. Network Latency: High ping times between application server and database (>200ms).
+2. Database Overload: High CPU/memory usage on the DB server, often due to unoptimized queries or concurrent connections exceeding pool limits (default: 50).
+3. Configuration Issues: Incorrect connection strings in config/database.yml, such as wrong host, port, or credentials.
+4. Firewall/Routing Problems: Blocked ports or misconfigured VPC rules in cloud environments (AWS, Azure).
+5. Resource Exhaustion: Database service crashed or out of disk space.
+
+Troubleshooting Steps
+1. Verify Database Status: Run `systemctl status postgresql` (or mysql equivalent) on the DB server. Restart if inactive.
+2. Test Connectivity: From the app server, execute `telnet db-host 5432` to check port accessibility. If it fails, inspect firewalls.
+3. Review Logs: Check /var/log/postgresql/postgresql.log for errors like "could not connect" or "FATAL: remaining connection slots are reserved."
+4. Monitor Resources: Use tools like pgAdmin or MySQL Workbench to view active connections. Kill idle sessions if >80% capacity.
+5. Validate Config: Ensure connection string in app config includes timeout=60s and pool_size=100.
+
+Resolution
+- Immediate Fix: Increase connection timeout in application config from 30s to 60s and restart the API server.
+- Long-term: Optimize slow queries using EXPLAIN ANALYZE in PostgreSQL. Implement connection pooling with PgBouncer. Scale DB instance vertically (more CPU/RAM).
+- Prevention: Set up monitoring alerts for connection pool usage >70% via Prometheus/Grafana.
+
+Related Errors
+- TS-998: Authentication Failure
+- TS-997: Query Timeout
+- TS-996: Pool Exhausted
+
+Last Updated: September 2025. Contact support@acme.com for assistance.
